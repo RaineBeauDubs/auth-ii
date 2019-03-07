@@ -1,9 +1,12 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const router = require('express').Router();
-const Users = require('../users/users-model');
 
+const Users = require('../users/users-model');
+const restricted = require('./restrictedMiddleware');
 const secrets = require('../secret/secrets');
+
+// REGISTER USERS
 
 router.post('/register', (req, res) => {
   let user = req.body;
@@ -22,6 +25,8 @@ router.post('/register', (req, res) => {
         .json(error);
     });
 });
+
+// USER LOGIN
 
 router.post('/login', (req, res) => {
   let { username, password } = req.body;
@@ -53,6 +58,8 @@ router.post('/login', (req, res) => {
     });
 });
 
+// GENERATE TOKENS FUNCTION
+
 function generateToken(user){
   const payload = {
     subject: user.id,
@@ -63,5 +70,15 @@ function generateToken(user){
   }
   return jwt.sign(payload, secrets.jwtSecret, options)
 }
+
+// GET LIST OF USERS
+
+router.get('/users', restricted, (req, res) => {
+  Users.find()
+    .then(users => {
+      res.json(users);
+    })
+    .catch(error => res.send(error));
+});
 
 module.exports = router;
